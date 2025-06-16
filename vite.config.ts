@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: process.env.NODE_ENV === 'production' ? '/vibrant-pos-portal/' : '/',
+  base: '/vibrant-pos-portal/', // GANTI jadi sesuai nama repo Mas
   server: {
     host: "::",
     port: 8080,
