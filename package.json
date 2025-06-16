@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
+    "homepage": "https://ardinirmansyah.github.io/vibrant-pos-portal/",
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
