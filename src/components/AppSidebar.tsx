@@ -24,6 +24,8 @@ import {
   UserPlus,
   Settings,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "react-router-dom";
 
 const mainMenuItems = [
   {
@@ -32,24 +34,12 @@ const mainMenuItems = [
     url: "/",
   },
   {
-    title: "Suppliers",
-    icon: Truck,
-    url: "/suppliers",
-    badge: 5,
-  },
-  {
-    title: "Customers", 
-    icon: Users,
-    url: "/customers",
-    badge: 3,
-  },
-  {
     title: "Products",
     icon: Package,
     url: "/products",
   },
   {
-    title: "Transaction",
+    title: "Transactions",
     icon: CreditCard,
     url: "/transactions",
   },
@@ -57,6 +47,7 @@ const mainMenuItems = [
     title: "Reports",
     icon: FileText,
     url: "/reports",
+    requiresAdmin: true,
   },
 ];
 
@@ -65,16 +56,23 @@ const settingsItems = [
     title: "Users / Employees",
     icon: UserPlus,
     url: "/users",
-    badge: 4,
+    requiresAdmin: true,
   },
   {
     title: "Configuration",
     icon: Settings,
     url: "/configuration",
+    requiresAdmin: true,
   },
 ];
 
 export function AppSidebar() {
+  const { isAdmin } = useAuth();
+  const location = useLocation();
+
+  const filteredMainItems = mainMenuItems.filter(item => !item.requiresAdmin || isAdmin);
+  const filteredSettingsItems = settingsItems.filter(item => !item.requiresAdmin || isAdmin);
+
   return (
     <Sidebar className="border-r-0 bg-gray-800">
       <SidebarHeader className="border-b border-gray-700 p-4">
@@ -106,23 +104,18 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map((item) => (
+              {filteredMainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
                     className="text-gray-300 hover:text-white hover:bg-gray-700 data-[active=true]:bg-purple-600 data-[active=true]:text-white"
-                    isActive={item.url === "/"}
+                    isActive={location.pathname === item.url}
                   >
                     <a href={item.url} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <item.icon size={18} />
                         <span>{item.title}</span>
                       </div>
-                      {item.badge && (
-                        <Badge variant="secondary" className="bg-purple-600 text-white text-xs">
-                          {item.badge}
-                        </Badge>
-                      )}
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -131,35 +124,33 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wide font-medium mb-2">
-            SETTINGS
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {settingsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className="text-gray-300 hover:text-white hover:bg-gray-700"
-                  >
-                    <a href={item.url} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <item.icon size={18} />
-                        <span>{item.title}</span>
-                      </div>
-                      {item.badge && (
-                        <Badge variant="secondary" className="bg-red-600 text-white text-xs">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {filteredSettingsItems.length > 0 && (
+          <SidebarGroup className="mt-6">
+            <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wide font-medium mb-2">
+              SETTINGS
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {filteredSettingsItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      className="text-gray-300 hover:text-white hover:bg-gray-700 data-[active=true]:bg-purple-600 data-[active=true]:text-white"
+                      isActive={location.pathname === item.url}
+                    >
+                      <a href={item.url} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <item.icon size={18} />
+                          <span>{item.title}</span>
+                        </div>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );
