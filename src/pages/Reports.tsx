@@ -40,17 +40,31 @@ export default function Reports() {
   const { data: recentTransactions } = useQuery({
     queryKey: ['all-transactions'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get transactions
+      const { data: transactions, error: transError } = await supabase
         .from('transactions')
-        .select(`
-          *,
-          profiles!inner(full_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(10);
       
-      if (error) throw error;
-      return data;
+      if (transError) throw transError;
+      
+      // Then get profiles for the user IDs
+      const userIds = transactions.map(t => t.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Combine the data
+      const transactionsWithProfiles = transactions.map(transaction => ({
+        ...transaction,
+        profiles: profiles.find(p => p.id === transaction.user_id) || { full_name: null }
+      }));
+      
+      return transactionsWithProfiles;
     },
   });
 

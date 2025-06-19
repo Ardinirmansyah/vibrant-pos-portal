@@ -17,7 +17,7 @@ interface UserWithRole {
   email: string;
   full_name: string | null;
   created_at: string;
-  user_roles: Array<{ role: 'admin' | 'cashier' }>;
+  role: 'admin' | 'cashier';
 }
 
 export default function Users() {
@@ -26,18 +26,27 @@ export default function Users() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users-with-roles'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          email,
-          full_name,
-          created_at,
-          user_roles(role)
-        `);
+        .select('id, email, full_name, created_at');
       
-      if (error) throw error;
-      return data as UserWithRole[];
+      if (profilesError) throw profilesError;
+      
+      // Then get user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+      
+      if (rolesError) throw rolesError;
+      
+      // Combine the data
+      const usersWithRoles: UserWithRole[] = profiles.map(profile => ({
+        ...profile,
+        role: userRoles.find(role => role.user_id === profile.id)?.role || 'cashier'
+      }));
+      
+      return usersWithRoles;
     },
   });
 
@@ -163,48 +172,45 @@ export default function Users() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users?.map((user) => {
-                      const currentRole = user.user_roles[0]?.role || 'cashier';
-                      return (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">
-                                {user.full_name || 'No name provided'}
-                              </div>
+                    {users?.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {user.full_name || 'No name provided'}
                             </div>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={currentRole === 'admin' ? 'default' : 'secondary'}
-                              className={currentRole === 'admin' ? 'bg-purple-600' : ''}
-                            >
-                              {currentRole}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={currentRole}
-                              onValueChange={(newRole: 'admin' | 'cashier') => 
-                                updateUserRoleMutation.mutate({ userId: user.id, newRole })
-                              }
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="cashier">Cashier</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={user.role === 'admin' ? 'default' : 'secondary'}
+                            className={user.role === 'admin' ? 'bg-purple-600' : ''}
+                          >
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={user.role}
+                            onValueChange={(newRole: 'admin' | 'cashier') => 
+                              updateUserRoleMutation.mutate({ userId: user.id, newRole })
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="cashier">Cashier</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
