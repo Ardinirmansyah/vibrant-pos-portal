@@ -27,11 +27,11 @@ export default function Reports() {
       const monthTransactions = data.filter(t => t.created_at.startsWith(thisMonth));
       
       return {
-        totalRevenue: data.reduce((sum, t) => sum + parseFloat(t.total_amount), 0),
+        totalRevenue: data.reduce((sum, t) => sum + Number(t.total_amount), 0),
         totalTransactions: data.length,
-        todayRevenue: todayTransactions.reduce((sum, t) => sum + parseFloat(t.total_amount), 0),
+        todayRevenue: todayTransactions.reduce((sum, t) => sum + Number(t.total_amount), 0),
         todayTransactions: todayTransactions.length,
-        monthRevenue: monthTransactions.reduce((sum, t) => sum + parseFloat(t.total_amount), 0),
+        monthRevenue: monthTransactions.reduce((sum, t) => sum + Number(t.total_amount), 0),
         monthTransactions: monthTransactions.length,
       };
     },
@@ -73,7 +73,7 @@ export default function Reports() {
           acc[productName] = { name: productName, quantity: 0, revenue: 0 };
         }
         acc[productName].quantity += item.quantity;
-        acc[productName].revenue += parseFloat(item.total_price);
+        acc[productName].revenue += Number(item.total_price);
         return acc;
       }, {});
       
@@ -99,7 +99,7 @@ export default function Reports() {
         if (!dailyData[date]) {
           dailyData[date] = 0;
         }
-        dailyData[date] += parseFloat(transaction.total_amount);
+        dailyData[date] += Number(transaction.total_amount);
       });
       
       return Object.entries(dailyData).map(([date, revenue]) => ({
