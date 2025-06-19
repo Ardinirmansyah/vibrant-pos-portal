@@ -21,7 +21,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/vibrant-pos-portal">
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
